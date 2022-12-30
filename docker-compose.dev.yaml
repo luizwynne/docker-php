@@ -1,8 +1,7 @@
 services:
     # nginx
     web:
-        build: 
-            dockerfile: ./nginx/Dockerfile
+        image: nginx:latest
         ports:
             - "80:80"
         volumes:
@@ -11,9 +10,10 @@ services:
     app:
         build:
             dockerfile: ./php/Dockerfile
+            target: app_dev
         volumes:
-            - /var/www/html/vendor
             - ./app:/var/www/html
+            - ./php/conf.d/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:ro
         environment:
             MYSQL_HOST: db
             MYSQL_PORT: ${MYSQL_PORT}
@@ -22,6 +22,11 @@ services:
             MYSQL_USER: ${MYSQL_USER}
             REDIS_HOST: cache
             REDIS_PORT: ${REDIS_PORT}
+                # See https://xdebug.org/docs/all_settings#mode
+            XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+        extra_hosts:
+            # Ensure that host.docker.internal is correctly defined on Linux
+            - host.docker.internal:host-gateway
     # mysql
     db:
         image: mysql:8.0
